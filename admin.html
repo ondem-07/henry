@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Teacher Admin Dashboard</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f3f6;
+    padding: 20px;
+}
+.container {
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+}
+button {
+    background: #1a73e8;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background: #0c5edc;
+}
+.hidden {
+    display: none;
+}
+.question-box {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+.delete {
+    background: red;
+    margin-top: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="login">
+    <h2>Teacher Login</h2>
+    <input type="password" id="pin" placeholder="Enter Admin PIN">
+    <button onclick="checkPin()">Login</button>
+</div>
+
+<div class="container hidden" id="dashboard">
+    <h2>Teacher Admin Dashboard</h2>
+
+    <!-- TIMER CONTROL -->
+    <h3>Exam Timer Settings</h3>
+    <input type="number" id="timerInput" placeholder="Time per question (seconds)">
+    <button onclick="saveTimer()">Save Timer</button>
+
+    <hr>
+
+    <!-- ADD QUESTION -->
+    <h3>Add New Question</h3>
+    <input id="qText" placeholder="Question">
+    <input id="optA" placeholder="Option A">
+    <input id="optB" placeholder="Option B">
+    <input id="optC" placeholder="Option C">
+    <input id="optD" placeholder="Option D">
+
+    <select id="correct">
+        <option value="">Correct Answer</option>
+        <option value="0">A</option>
+        <option value="1">B</option>
+        <option value="2">C</option>
+        <option value="3">D</option>
+    </select>
+
+    <button onclick="addQuestion()">Add Question</button>
+
+    <h3>Saved Questions</h3>
+    <div id="questionList"></div>
+</div>
+
+<script>
+const ADMIN_PIN = "1234"; // CHANGE THIS PIN
+
+let questions = JSON.parse(localStorage.getItem("examQuestions")) || [];
+
+// ===== LOGIN =====
+function checkPin() {
+    if (pin.value === ADMIN_PIN) {
+        login.classList.add("hidden");
+        dashboard.classList.remove("hidden");
+        loadTimer();
+        renderQuestions();
+    } else {
+        alert("Wrong PIN");
+    }
+}
+
+// ===== TIMER CONTROL =====
+function loadTimer() {
+    let saved = localStorage.getItem("questionTimer") || 20;
+    timerInput.value = saved;
+}
+
+function saveTimer() {
+    let time = Number(timerInput.value);
+    if (time < 5) {
+        alert("Timer must be at least 5 seconds");
+        return;
+    }
+    localStorage.setItem("questionTimer", time);
+    alert("Timer saved successfully");
+}
+
+// ===== QUESTIONS =====
+function addQuestion() {
+    if (!qText.value || !optA.value || !optB.value || !optC.value || !optD.value || correct.value === "") {
+        alert("Fill all fields");
+        return;
+    }
+
+    questions.push({
+        question: qText.value,
+        options: [optA.value, optB.value, optC.value, optD.value],
+        answer: Number(correct.value)
+    });
+
+    localStorage.setItem("examQuestions", JSON.stringify(questions));
+    clearForm();
+    renderQuestions();
+}
+
+function renderQuestions() {
+    questionList.innerHTML = "";
+    questions.forEach((q, i) => {
+        const div = document.createElement("div");
+        div.className = "question-box";
+        div.innerHTML = `
+            <strong>${i + 1}. ${q.question}</strong><br>
+            A. ${q.options[0]}<br>
+            B. ${q.options[1]}<br>
+            C. ${q.options[2]}<br>
+            D. ${q.options[3]}<br>
+            <em>Correct: ${["A","B","C","D"][q.answer]}</em>
+            <button class="delete" onclick="deleteQuestion(${i})">Delete</button>
+        `;
+        questionList.appendChild(div);
+    });
+}
+
+function deleteQuestion(i) {
+    if (!confirm("Delete this question?")) return;
+    questions.splice(i, 1);
+    localStorage.setItem("examQuestions", JSON.stringify(questions));
+    renderQuestions();
+}
+
+function clearForm() {
+    qText.value = optA.value = optB.value = optC.value = optD.value = "";
+    correct.value = "";
+}
+</script>
+
+</body>
+</html>

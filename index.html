@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Practice Exam</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+}
+.container {
+    max-width: 850px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    margin-top: 30px;
+    border-radius: 10px;
+}
+.question-box {
+    border-bottom: 1px solid #ddd;
+    padding: 15px 0;
+}
+.option {
+    background: #eef1f5;
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.option.correct { background: #c8f7c5; }
+.option.wrong { background: #f7c5c5; }
+.option.disabled {
+    pointer-events: none;
+    opacity: 0.7;
+}
+.timer {
+    text-align: right;
+    font-weight: bold;
+}
+.unanswered {
+    background: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 10px;
+}
+.hidden { display: none; }
+button, input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+}
+button {
+    background: #1a73e8;
+    color: white;
+    border: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="login">
+    <h2>Student Login</h2>
+    <input id="studentName" placeholder="Full Name">
+    <input id="phone" placeholder="Phone Number">
+    <button onclick="startTest()">Start Test</button>
+</div>
+
+<div class="container hidden" id="quiz">
+    <h2>Answer All Questions</h2>
+    <div id="questionsContainer"></div>
+    <button onclick="submitExam()">Submit</button>
+</div>
+
+<div class="container hidden" id="result">
+    <h2 id="scoreText"></h2>
+    <p id="message"></p>
+    <h3>Review</h3>
+    <div id="reviewContainer"></div>
+</div>
+
+<script>
+// ===== LOAD FROM ADMIN =====
+let questions = JSON.parse(localStorage.getItem("examQuestions")) || [];
+const questionTime = Number(localStorage.getItem("questionTimer")) || 20;
+
+// ===== VARIABLES =====
+let studentAnswers = [];
+let timers = [];
+
+// ===== START TEST =====
+function startTest() {
+    if (!studentName.value || !phone.value) {
+        alert("Enter name and phone number");
+        return;
+    }
+    if (questions.length === 0) {
+        alert("No questions available");
+        return;
+    }
+
+    studentAnswers = Array(questions.length).fill(null);
+    login.classList.add("hidden");
+    quiz.classList.remove("hidden");
+    renderQuestions();
+}
+
+// ===== RENDER QUESTIONS =====
+function renderQuestions() {
+    questionsContainer.innerHTML = "";
+
+    questions.forEach((q, i) => {
+        const box = document.createElement("div");
+        box.className = "question-box";
+
+        const timerDiv = document.createElement("div");
+        timerDiv.className = "timer";
+        timerDiv.innerText = `Time: ${questionTime}s`;
+
+        box.innerHTML = `<h3>Question ${i + 1}: ${q.question}</h3>`;
+        box.prepend(timerDiv);
+
+        q.options.forEach((opt, j) => {
+            const optDiv = document.createElement("div");
+            optDiv.className = "option";
+            optDiv.innerText = opt;
+            optDiv.onclick = () => answer(i, j, optDiv, box);
+            box.appendChild(optDiv);
+        });
+
+        questionsContainer.appendChild(box);
+        startTimer(i, timerDiv, box);
+    });
+}
+
+// ===== TIMER =====
+function startTimer(index, display, box) {
+    let timeLeft = questionTime;
+    timers[index] = setInterval(() => {
+        timeLeft--;
+        display.innerText = `Time: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+            clearInterval(timers[index]);
+            lock(box);
+        }
+    }, 1000);
+}
+
+// ===== ANSWER =====
+function answer(qIndex, optIndex, optDiv, box) {
+    if (studentAnswers[qIndex] !== null) return;
+
+    studentAnswers[qIndex] = optIndex;
+    clearInterval(timers[qIndex]);
+
+    if (optIndex === questions[qIndex].answer) {
+        optDiv.classList.add("correct");
+    } else {
+        optDiv.classList.add("wrong");
+    }
+    lock(box);
+}
+
+// ===== LOCK =====
+function lock(box) {
+    box.querySelectorAll(".option").forEach(o => o.classList.add("disabled"));
+}
+
+// ===== SUBMIT =====
+function submitExam() {
+    let score = 0;
+    reviewContainer.innerHTML = "";
+
+    questions.forEach((q, i) => {
+        if (studentAnswers[i] === q.answer) score++;
+        else {
+            const div = document.createElement("div");
+            div.className = "question-box";
+            if (studentAnswers[i] === null) div.classList.add("unanswered");
+
+            div.innerHTML = `
+                <strong>Question ${i + 1}:</strong> ${q.question}<br>
+                ${studentAnswers[i] === null ? "⚠️ Unanswered<br>" : "❌ Your answer: " + q.options[studentAnswers[i]] + "<br>"}
+                ✅ Correct answer: ${q.options[q.answer]}
+            `;
+            reviewContainer.appendChild(div);
+        }
+    });
+
+    let percent = Math.round((score / questions.length) * 100);
+    quiz.classList.add("hidden");
+    result.classList.remove("hidden");
+
+    scoreText.innerText = `Score: ${percent}%`;
+    message.innerText = percent >= 50 ? "PASS – Well done!" : "FAIL – Study and try again";
+}
+</script>
+
+</body>
+</html>
