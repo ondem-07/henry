@@ -163,6 +163,21 @@ function renderQuestions() {
         `;
         questionList.appendChild(div);
     });
+
+<h2>Student Results</h2>
+<table border="1" width="100%">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Score</th>
+      <th>Percentage</th>
+      <th>Time</th>
+    </tr>
+  </thead>
+  <tbody id="resultsTable"></tbody>
+</table>
+
 }
 
 function deleteQuestion(i) {
@@ -202,6 +217,31 @@ function clearForm() {
   }
 
   window.saveExamSettings = saveExamSettings;
+
+<script type="module">
+import { db } from "./firebase.js";
+import { collection, onSnapshot } from 
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const table = document.getElementById("resultsTable");
+
+onSnapshot(collection(db, "results"), (snapshot) => {
+  table.innerHTML = "";
+  snapshot.forEach(doc => {
+    const d = doc.data();
+    table.innerHTML += `
+      <tr>
+        <td>${d.name}</td>
+        <td>${d.phone}</td>
+        <td>${d.score}/${d.total}</td>
+        <td>${d.percentage}%</td>
+        <td>${d.timestamp?.toDate().toLocaleString() || ""}</td>
+      </tr>
+    `;
+  });
+});
+</script>
+
 </script>
 
 

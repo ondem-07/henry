@@ -189,6 +189,9 @@ function submitExam() {
                 ✅ Correct answer: ${q.options[q.answer]}
             `;
             reviewContainer.appendChild(div);
+import { collection, addDoc, serverTimestamp } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
         }
     });
 
@@ -198,6 +201,16 @@ function submitExam() {
 
     scoreText.innerText = `Score: ${percent}%`;
     message.innerText = percent >= 50 ? "PASS – Well done!" : "FAIL – Study and try again";
+// 🔥 SAVE RESULT TO FIRESTORE
+addDoc(collection(db, "results"), {
+  name: document.getElementById("studentName").value,
+  phone: document.getElementById("studentPhone").value,
+  score: score,
+  total: questions.length,
+  percentage: percent,
+  timestamp: serverTimestamp()
+});
+
 }
 </script>
 <script src="firebase.js" type="module"></script>  
