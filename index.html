@@ -67,6 +67,11 @@ button {
 </div>
 
 <div class="container hidden" id="quiz">
+
+<h1 id="examHeading">
+WASSCE 2026 PREPARATION GROUP QUIZ PAGE BY SIR HENRY & SIR HERBET
+</h1>
+
     <h2>Answer All Questions</h2>
     <div id="questionsContainer"></div>
     <button onclick="submitExam()">Submit</button>
@@ -195,7 +200,24 @@ function submitExam() {
     message.innerText = percent >= 50 ? "PASS – Well done!" : "FAIL – Study and try again";
 }
 </script>
-<script src="firebase.js" type="module"></script>
+<script src="firebase.js" type="module"></script>  
+
+<script type="module">
+import { db } from "./firebase.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const examRef = doc(db, "settings", "exam");
+
+getDoc(examRef).then((docSnap) => {
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    if (data.title) {
+      document.getElementById("examHeading").innerText = data.title;
+    }
+  }
+});
+</script>
+
 
 </body>
 </html>
