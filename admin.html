@@ -51,6 +51,17 @@ button:hover {
     <h2>Teacher Login</h2>
     <input type="password" id="pin" placeholder="Enter Admin PIN">
     <button onclick="checkPin()">Login</button>
+
+<h2>Create Exam</h2>
+
+<input type="text" id="examTitle" placeholder="Enter Exam Title" />
+
+<input type="number" id="examTime" placeholder="Time in seconds (e.g. 1200)" />
+
+<button onclick="saveExamSettings()">Save Exam Settings</button>
+
+<p id="saveStatus"></p>
+
 </div>
 
 <div class="container hidden" id="dashboard">
@@ -167,6 +178,32 @@ function clearForm() {
 }
 </script>
 <script src="firebase.js" type="module"></script>
+
+<script type="module">
+  import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  async function saveExamSettings() {
+    const title = document.getElementById("examTitle").value;
+    const time = document.getElementById("examTime").value;
+
+    if (!title || !time) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    await setDoc(doc(db, "exam", "settings"), {
+      title: title,
+      time: Number(time),
+      createdAt: new Date()
+    });
+
+    document.getElementById("saveStatus").innerText =
+      "✅ Exam settings saved successfully";
+  }
+
+  window.saveExamSettings = saveExamSettings;
+</script>
+
 
 </body>
 </html>
