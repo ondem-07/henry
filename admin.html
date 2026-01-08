@@ -28,7 +28,12 @@ button {
     border: none;
     cursor: pointer;
 }
-.hidden { display: none; }
+button:hover {
+    background: #0c5edc;
+}
+.hidden {
+    display: none;
+}
 .question-box {
     border-bottom: 1px solid #ddd;
     padding: 10px 0;
@@ -51,21 +56,14 @@ button {
 <div class="container hidden" id="dashboard">
     <h2>Teacher Admin Dashboard</h2>
 
-    <!-- EXAM TITLE -->
-    <h3>Exam Title</h3>
-    <input id="examTitleInput" placeholder="Enter exam title (e.g. BECE Math Mock Test)">
-    <button onclick="saveExamTitle()">Save Exam Title</button>
-
-    <hr>
-
-    <!-- TIMER -->
-    <h3>Time Per Question (Seconds)</h3>
-    <input type="number" id="timerInput">
+    <!-- TIMER CONTROL -->
+    <h3>Exam Timer Settings</h3>
+    <input type="number" id="timerInput" placeholder="Time per question (seconds)">
     <button onclick="saveTimer()">Save Timer</button>
 
     <hr>
 
-    <!-- QUESTIONS -->
+    <!-- ADD QUESTION -->
     <h3>Add New Question</h3>
     <input id="qText" placeholder="Question">
     <input id="optA" placeholder="Option A">
@@ -88,7 +86,8 @@ button {
 </div>
 
 <script>
-const ADMIN_PIN = "1234"; // CHANGE THIS
+const ADMIN_PIN = "1234"; // CHANGE THIS PIN
+
 let questions = JSON.parse(localStorage.getItem("examQuestions")) || [];
 
 // ===== LOGIN =====
@@ -96,31 +95,27 @@ function checkPin() {
     if (pin.value === ADMIN_PIN) {
         login.classList.add("hidden");
         dashboard.classList.remove("hidden");
-        loadSettings();
+        loadTimer();
         renderQuestions();
     } else {
         alert("Wrong PIN");
     }
 }
 
-// ===== LOAD SETTINGS =====
-function loadSettings() {
-    examTitleInput.value = localStorage.getItem("examTitle") || "";
-    timerInput.value = localStorage.getItem("questionTimer") || 20;
+// ===== TIMER CONTROL =====
+function loadTimer() {
+    let saved = localStorage.getItem("questionTimer") || 20;
+    timerInput.value = saved;
 }
 
-// ===== SAVE TITLE =====
-function saveExamTitle() {
-    localStorage.setItem("examTitle", examTitleInput.value.trim());
-    alert("Exam title saved");
-}
-
-// ===== SAVE TIMER =====
 function saveTimer() {
-    let t = Number(timerInput.value);
-    if (t < 5) return alert("Minimum 5 seconds");
-    localStorage.setItem("questionTimer", t);
-    alert("Timer saved");
+    let time = Number(timerInput.value);
+    if (time < 5) {
+        alert("Timer must be at least 5 seconds");
+        return;
+    }
+    localStorage.setItem("questionTimer", time);
+    alert("Timer saved successfully");
 }
 
 // ===== QUESTIONS =====
@@ -130,37 +125,13 @@ function addQuestion() {
         return;
     }
 
-   async function addQuestion() {
-    if (!qText.value || !optA.value || !optB.value || !optC.value || !optD.value || correct.value === "") {
-        alert("Fill all fields");
-        return;
-    }
-
-    const questionData = {
+    questions.push({
         question: qText.value,
         options: [optA.value, optB.value, optC.value, optD.value],
         answer: Number(correct.value)
-    };
-
-    await saveQuestion(questionData);
-
-    clearForm();
-}
-
     });
 
-    <script type="module">
-import { db } from "./firebase.js";
-import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-async function saveQuestion(question) {
-  await addDoc(collection(db, "questions"), question);
-  alert("Question saved online");
-}
-
-window.saveQuestion = saveQuestion;
-</script>
-
+    localStorage.setItem("examQuestions", JSON.stringify(questions));
     clearForm();
     renderQuestions();
 }
@@ -168,31 +139,19 @@ window.saveQuestion = saveQuestion;
 function renderQuestions() {
     questionList.innerHTML = "";
     questions.forEach((q, i) => {
-        questionList.innerHTML += `
-            <div class="question-box">
-                <strong>${i + 1}. ${q.question}</strong><br>
-                A. ${q.options[0]}<br>
-                B. ${q.options[1]}<br>
-                C. ${q.options[2]}<br>
-                D. ${q.options[3]}<br>
-                <em>Correct: ${["A","B","C","D"][q.answer]}</em>
-                <button class="delete" onclick="deleteQuestion(${i})">Delete</button>
-            </div>
+        const div = document.createElement("div");
+        div.className = "question-box";
+        div.innerHTML = `
+            <strong>${i + 1}. ${q.question}</strong><br>
+            A. ${q.options[0]}<br>
+            B. ${q.options[1]}<br>
+            C. ${q.options[2]}<br>
+            D. ${q.options[3]}<br>
+            <em>Correct: ${["A","B","C","D"][q.answer]}</em>
+            <button class="delete" onclick="deleteQuestion(${i})">Delete</button>
         `;
+        questionList.appendChild(div);
     });
-}
-
-function deleteQuestion(i) {
-    if (!confirm("Delete this question?")) return;
-    questions.splice(i, 1);
-    localStorage.setItem("examQuestions", JSON.stringify(questions));
-    renderQuestions();
-}
-
-function clearForm() {
-    qText.value = optA.value = optB.value = optC.value = optD.value = "";
-    correct.value = "";
-}
 
 
 
