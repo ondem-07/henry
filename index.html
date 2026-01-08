@@ -67,11 +67,6 @@ button {
 </div>
 
 <div class="container hidden" id="quiz">
-
-<h1 id="examHeading">
-WASSCE 2026 PREPARATION GROUP QUIZ PAGE BY SIR HENRY & SIR HERBET
-</h1>
-
     <h2>Answer All Questions</h2>
     <div id="questionsContainer"></div>
     <button onclick="submitExam()">Submit</button>
@@ -189,9 +184,6 @@ function submitExam() {
                 ✅ Correct answer: ${q.options[q.answer]}
             `;
             reviewContainer.appendChild(div);
-import { collection, addDoc, serverTimestamp } from
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
         }
     });
 
@@ -201,34 +193,28 @@ import { collection, addDoc, serverTimestamp } from
 
     scoreText.innerText = `Score: ${percent}%`;
     message.innerText = percent >= 50 ? "PASS – Well done!" : "FAIL – Study and try again";
-// 🔥 SAVE RESULT TO FIRESTORE
-addDoc(collection(db, "results"), {
-  name: document.getElementById("studentName").value,
-  phone: document.getElementById("studentPhone").value,
-  score: score,
-  total: questions.length,
-  percentage: percent,
-  timestamp: serverTimestamp()
-});
-
 }
 </script>
-<script src="firebase.js" type="module"></script>  
 
 <script type="module">
-import { db } from "./firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const examRef = doc(db, "settings", "exam");
+  const firebaseConfig = {
+    /* SAME CONFIG */
+  };
 
-getDoc(examRef).then((docSnap) => {
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    if (data.title) {
-      document.getElementById("examHeading").innerText = data.title;
-    }
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function loadQuestions() {
+    const snapshot = await getDocs(collection(db, "questions"));
+    snapshot.forEach(doc => {
+      renderQuestion(doc.data());
+    });
   }
-});
+
+  loadQuestions();
 </script>
 
 

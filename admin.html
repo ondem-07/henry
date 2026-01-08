@@ -28,12 +28,7 @@ button {
     border: none;
     cursor: pointer;
 }
-button:hover {
-    background: #0c5edc;
-}
-.hidden {
-    display: none;
-}
+.hidden { display: none; }
 .question-box {
     border-bottom: 1px solid #ddd;
     padding: 10px 0;
@@ -51,30 +46,26 @@ button:hover {
     <h2>Teacher Login</h2>
     <input type="password" id="pin" placeholder="Enter Admin PIN">
     <button onclick="checkPin()">Login</button>
-
-<h2>Create Exam</h2>
-
-<input type="text" id="examTitle" placeholder="Enter Exam Title" />
-
-<input type="number" id="examTime" placeholder="Time in seconds (e.g. 1200)" />
-
-<button onclick="saveExamSettings()">Save Exam Settings</button>
-
-<p id="saveStatus"></p>
-
 </div>
 
 <div class="container hidden" id="dashboard">
     <h2>Teacher Admin Dashboard</h2>
 
-    <!-- TIMER CONTROL -->
-    <h3>Exam Timer Settings</h3>
-    <input type="number" id="timerInput" placeholder="Time per question (seconds)">
+    <!-- EXAM TITLE -->
+    <h3>Exam Title</h3>
+    <input id="examTitleInput" placeholder="Enter exam title (e.g. BECE Math Mock Test)">
+    <button onclick="saveExamTitle()">Save Exam Title</button>
+
+    <hr>
+
+    <!-- TIMER -->
+    <h3>Time Per Question (Seconds)</h3>
+    <input type="number" id="timerInput">
     <button onclick="saveTimer()">Save Timer</button>
 
     <hr>
 
-    <!-- ADD QUESTION -->
+    <!-- QUESTIONS -->
     <h3>Add New Question</h3>
     <input id="qText" placeholder="Question">
     <input id="optA" placeholder="Option A">
@@ -97,8 +88,7 @@ button:hover {
 </div>
 
 <script>
-const ADMIN_PIN = "1234"; // CHANGE THIS PIN
-
+const ADMIN_PIN = "1234"; // CHANGE THIS
 let questions = JSON.parse(localStorage.getItem("examQuestions")) || [];
 
 // ===== LOGIN =====
@@ -106,27 +96,31 @@ function checkPin() {
     if (pin.value === ADMIN_PIN) {
         login.classList.add("hidden");
         dashboard.classList.remove("hidden");
-        loadTimer();
+        loadSettings();
         renderQuestions();
     } else {
         alert("Wrong PIN");
     }
 }
 
-// ===== TIMER CONTROL =====
-function loadTimer() {
-    let saved = localStorage.getItem("questionTimer") || 20;
-    timerInput.value = saved;
+// ===== LOAD SETTINGS =====
+function loadSettings() {
+    examTitleInput.value = localStorage.getItem("examTitle") || "";
+    timerInput.value = localStorage.getItem("questionTimer") || 20;
 }
 
+// ===== SAVE TITLE =====
+function saveExamTitle() {
+    localStorage.setItem("examTitle", examTitleInput.value.trim());
+    alert("Exam title saved");
+}
+
+// ===== SAVE TIMER =====
 function saveTimer() {
-    let time = Number(timerInput.value);
-    if (time < 5) {
-        alert("Timer must be at least 5 seconds");
-        return;
-    }
-    localStorage.setItem("questionTimer", time);
-    alert("Timer saved successfully");
+    let t = Number(timerInput.value);
+    if (t < 5) return alert("Minimum 5 seconds");
+    localStorage.setItem("questionTimer", t);
+    alert("Timer saved");
 }
 
 // ===== QUESTIONS =====
@@ -150,34 +144,18 @@ function addQuestion() {
 function renderQuestions() {
     questionList.innerHTML = "";
     questions.forEach((q, i) => {
-        const div = document.createElement("div");
-        div.className = "question-box";
-        div.innerHTML = `
-            <strong>${i + 1}. ${q.question}</strong><br>
-            A. ${q.options[0]}<br>
-            B. ${q.options[1]}<br>
-            C. ${q.options[2]}<br>
-            D. ${q.options[3]}<br>
-            <em>Correct: ${["A","B","C","D"][q.answer]}</em>
-            <button class="delete" onclick="deleteQuestion(${i})">Delete</button>
+        questionList.innerHTML += `
+            <div class="question-box">
+                <strong>${i + 1}. ${q.question}</strong><br>
+                A. ${q.options[0]}<br>
+                B. ${q.options[1]}<br>
+                C. ${q.options[2]}<br>
+                D. ${q.options[3]}<br>
+                <em>Correct: ${["A","B","C","D"][q.answer]}</em>
+                <button class="delete" onclick="deleteQuestion(${i})">Delete</button>
+            </div>
         `;
-        questionList.appendChild(div);
     });
-
-<h2>Student Results</h2>
-<table border="1" width="100%">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Phone</th>
-      <th>Score</th>
-      <th>Percentage</th>
-      <th>Time</th>
-    </tr>
-  </thead>
-  <tbody id="resultsTable"></tbody>
-</table>
-
 }
 
 function deleteQuestion(i) {
@@ -191,57 +169,26 @@ function clearForm() {
     qText.value = optA.value = optB.value = optC.value = optD.value = "";
     correct.value = "";
 }
-</script>
-<script src="firebase.js" type="module"></script>
 
 <script type="module">
-  import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  async function saveExamSettings() {
-    const title = document.getElementById("examTitle").value;
-    const time = document.getElementById("examTime").value;
-
-    if (!title || !time) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    await setDoc(doc(db, "exam", "settings"), {
-      title: title,
-      time: Number(time),
-      createdAt: new Date()
-    });
-
-    document.getElementById("saveStatus").innerText =
-      "✅ Exam settings saved successfully";
-  }
-
-  window.saveExamSettings = saveExamSettings;
-
-<script type="module">
-import { db } from "./firebase.js";
-import { collection, onSnapshot } from 
-"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const table = document.getElementById("resultsTable");
-
-onSnapshot(collection(db, "results"), (snapshot) => {
-  table.innerHTML = "";
-  snapshot.forEach(doc => {
-    const d = doc.data();
-    table.innerHTML += `
-      <tr>
-        <td>${d.name}</td>
-        <td>${d.phone}</td>
-        <td>${d.score}/${d.total}</td>
-        <td>${d.percentage}%</td>
-        <td>${d.timestamp?.toDate().toLocaleString() || ""}</td>
-      </tr>
-    `;
-  });
-});
+async function saveQuestion(question) {
+  await addDoc(collection(db, "questions"), question);
+  alert("Question saved online");
+}
 </script>
 
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    /* 🔴 PASTE YOUR CONFIG HERE */
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 </script>
 
 
