@@ -130,13 +130,37 @@ function addQuestion() {
         return;
     }
 
-    questions.push({
+   async function addQuestion() {
+    if (!qText.value || !optA.value || !optB.value || !optC.value || !optD.value || correct.value === "") {
+        alert("Fill all fields");
+        return;
+    }
+
+    const questionData = {
         question: qText.value,
         options: [optA.value, optB.value, optC.value, optD.value],
         answer: Number(correct.value)
+    };
+
+    await saveQuestion(questionData);
+
+    clearForm();
+}
+
     });
 
-    localStorage.setItem("examQuestions", JSON.stringify(questions));
+    <script type="module">
+import { db } from "./firebase.js";
+import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+async function saveQuestion(question) {
+  await addDoc(collection(db, "questions"), question);
+  alert("Question saved online");
+}
+
+window.saveQuestion = saveQuestion;
+</script>
+
     clearForm();
     renderQuestions();
 }
