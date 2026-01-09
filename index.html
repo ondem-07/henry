@@ -3,207 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <title>Student Practice Exam</title>
-
 <style>
+/* ... (your CSS unchanged) ... */
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f9;
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
 }
 .container {
-    max-width: 850px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    margin-top: 30px;
-    border-radius: 10px;
+  max-width: 850px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  margin-top: 30px;
+  border-radius: 10px;
 }
 .question-box {
-    border-bottom: 1px solid #ddd;
-    padding: 15px 0;
+  border-bottom: 1px solid #ddd;
+  padding: 15px 0;
 }
 .option {
-    background: #eef1f5;
-    padding: 10px;
-    margin-top: 8px;
-    border-radius: 5px;
-    cursor: pointer;
+  background: #eef1f5;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 5px;
+  cursor: pointer;
 }
 .option.correct { background: #c8f7c5; }
 .option.wrong { background: #f7c5c5; }
 .option.disabled {
-    pointer-events: none;
-    opacity: 0.7;
+  pointer-events: none;
+  opacity: 0.7;
 }
 .timer {
-    text-align: right;
-    font-weight: bold;
+  text-align: right;
+  font-weight: bold;
 }
 .unanswered {
-    background: #fff3cd;
-    border-left: 5px solid #ffc107;
-    padding: 10px;
+  background: #fff3cd;
+  border-left: 5px solid #ffc107;
+  padding: 10px;
 }
 .hidden { display: none; }
 button, input {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
 }
 button {
-    background: #1a73e8;
-    color: white;
-    border: none;
+  background: #1a73e8;
+  color: white;
+  border: none;
 }
 </style>
 </head>
-
 <body>
 
 <div class="container" id="login">
-    <h2>Student Login</h2>
-    <input id="studentName" placeholder="Full Name">
-    <input id="phone" placeholder="Phone Number">
-    <button onclick="startTest()">Start Test</button>
+  <h2>Student Login</h2>
+  <input id="studentName" placeholder="Full Name">
+  <input id="phone" placeholder="Phone Number">
+  <button id="startBtn">Start Test</button>
 </div>
 
 <div class="container hidden" id="quiz">
-    <h2>Answer All Questions</h2>
-    <div id="questionsContainer"></div>
-    <button onclick="submitExam()">Submit</button>
+  <h2>Answer All Questions</h2>
+  <div id="questionsContainer"></div>
+  <button onclick="submitExam()">Submit</button>
 </div>
 
 <div class="container hidden" id="result">
-    <h2 id="scoreText"></h2>
-    <p id="message"></p>
-    <h3>Review</h3>
-    <div id="reviewContainer"></div>
+  <h2 id="scoreText"></h2>
+  <p id="message"></p>
+  <h3>Review</h3>
+  <div id="reviewContainer"></div>
 </div>
 
-<script>
-// ===== LOAD FROM ADMIN =====
-let questions = JSON.parse(localStorage.getItem("examQuestions")) || [];
-const questionTime = Number(localStorage.getItem("questionTimer")) || 20;
-
-// ===== VARIABLES =====
-let studentAnswers = [];
-let timers = [];
-
-// ===== START TEST =====
-function startTest() {
-    if (!studentName.value || !phone.value) {
-        alert("Enter name and phone number");
-        return;
-    }
-    if (questions.length === 0) {
-        alert("No questions available");
-        return;
-    }
-
-    studentAnswers = Array(questions.length).fill(null);
-    login.classList.add("hidden");
-    quiz.classList.remove("hidden");
-    renderQuestions();
-}
-
-// ===== RENDER QUESTIONS =====
-function renderQuestions() {
-    questionsContainer.innerHTML = "";
-
-    questions.forEach((q, i) => {
-        const box = document.createElement("div");
-        box.className = "question-box";
-
-        const timerDiv = document.createElement("div");
-        timerDiv.className = "timer";
-        timerDiv.innerText = `Time: ${questionTime}s`;
-
-        box.innerHTML = `<h3>Question ${i + 1}: ${q.question}</h3>`;
-        box.prepend(timerDiv);
-
-        q.options.forEach((opt, j) => {
-            const optDiv = document.createElement("div");
-            optDiv.className = "option";
-            optDiv.innerText = opt;
-            optDiv.onclick = () => answer(i, j, optDiv, box);
-            box.appendChild(optDiv);
-        });
-
-        questionsContainer.appendChild(box);
-        startTimer(i, timerDiv, box);
-    });
-}
-
-// ===== TIMER =====
-function startTimer(index, display, box) {
-    let timeLeft = questionTime;
-    timers[index] = setInterval(() => {
-        timeLeft--;
-        display.innerText = `Time: ${timeLeft}s`;
-        if (timeLeft <= 0) {
-            clearInterval(timers[index]);
-            lock(box);
-        }
-    }, 1000);
-}
-
-// ===== ANSWER =====
-function answer(qIndex, optIndex, optDiv, box) {
-    if (studentAnswers[qIndex] !== null) return;
-
-    studentAnswers[qIndex] = optIndex;
-    clearInterval(timers[qIndex]);
-
-    if (optIndex === questions[qIndex].answer) {
-        optDiv.classList.add("correct");
-    } else {
-        optDiv.classList.add("wrong");
-    }
-    lock(box);
-}
-
-// ===== LOCK =====
-function lock(box) {
-    box.querySelectorAll(".option").forEach(o => o.classList.add("disabled"));
-}
-
-// ===== SUBMIT =====
-function submitExam() {
-    let score = 0;
-    reviewContainer.innerHTML = "";
-
-    questions.forEach((q, i) => {
-        if (studentAnswers[i] === q.answer) score++;
-        else {
-            const div = document.createElement("div");
-            div.className = "question-box";
-            if (studentAnswers[i] === null) div.classList.add("unanswered");
-
-            div.innerHTML = `
-                <strong>Question ${i + 1}:</strong> ${q.question}<br>
-                ${studentAnswers[i] === null ? "⚠️ Unanswered<br>" : "❌ Your answer: " + q.options[studentAnswers[i]] + "<br>"}
-                ✅ Correct answer: ${q.options[q.answer]}
-            `;
-            reviewContainer.appendChild(div);
-        }
-    });
-
-    let percent = Math.round((score / questions.length) * 100);
-    quiz.classList.add("hidden");
-    result.classList.remove("hidden");
-
-    scoreText.innerText = `Score: ${percent}%`;
-    message.innerText = percent >= 50 ? "PASS – Well done!" : "FAIL – Study and try again";
-}
-</script>
-
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+// Firebase config (use your own config here)
 const firebaseConfig = {
   apiKey: "AIzaSyBQgq3jwip2q9PQ0sSoxvZL1XbUNZvL7KI",
   authDomain: "sirhenry-ed030.firebaseapp.com",
@@ -216,23 +95,145 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.db = db;
+// DOM Elements
+const login = document.getElementById("login");
+const quiz = document.getElementById("quiz");
+const result = document.getElementById("result");
+const studentName = document.getElementById("studentName");
+const phone = document.getElementById("phone");
+const questionsContainer = document.getElementById("questionsContainer");
+const reviewContainer = document.getElementById("reviewContainer");
+const scoreText = document.getElementById("scoreText");
+const message = document.getElementById("message");
+const startBtn = document.getElementById("startBtn");
 
-  };
+let questions = [];
+let questionTime = 20; // default, will be updated from localStorage if available
+let studentAnswers = [];
+let timers = [];
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+// Load timer from localStorage (set by admin)
+const storedTimer = Number(localStorage.getItem("questionTimer"));
+if (!isNaN(storedTimer) && storedTimer > 0) {
+  questionTime = storedTimer;
+}
 
-  async function loadQuestions() {
-    const snapshot = await getDocs(collection(db, "questions"));
-    snapshot.forEach(doc => {
-      renderQuestion(doc.data());
-    });
+// Load questions from Firestore
+async function loadQuestions() {
+  questions = [];
+  const querySnapshot = await getDocs(collection(db, "examQuestions"));
+  querySnapshot.forEach((docSnap) => {
+    questions.push(docSnap.data());
+  });
+}
+await loadQuestions(); // Load questions before enabling the test
+
+// ===== START TEST =====
+startBtn.onclick = function startTest() {
+  if (!studentName.value || !phone.value) {
+    alert("Enter name and phone number");
+    return;
+  }
+  if (questions.length === 0) {
+    alert("No questions available");
+    return;
   }
 
-  loadQuestions();
+  studentAnswers = Array(questions.length).fill(null);
+  login.classList.add("hidden");
+  quiz.classList.remove("hidden");
+  renderQuestions();
+};
+
+// ===== RENDER QUESTIONS =====
+function renderQuestions() {
+  questionsContainer.innerHTML = "";
+
+  questions.forEach((q, i) => {
+    const box = document.createElement("div");
+    box.className = "question-box";
+
+    const timerDiv = document.createElement("div");
+    timerDiv.className = "timer";
+    timerDiv.innerText = `Time: ${questionTime}s`;
+
+    box.innerHTML = `<h3>Question ${i + 1}: ${q.question}</h3>`;
+    box.prepend(timerDiv);
+
+    q.options.forEach((opt, j) => {
+      const optDiv = document.createElement("div");
+      optDiv.className = "option";
+      optDiv.innerText = opt;
+      optDiv.onclick = () => answer(i, j, optDiv, box);
+      box.appendChild(optDiv);
+    });
+
+    questionsContainer.appendChild(box);
+    startTimer(i, timerDiv, box);
+  });
+}
+
+// ===== TIMER =====
+function startTimer(index, display, box) {
+  let timeLeft = questionTime;
+  timers[index] = setInterval(() => {
+    timeLeft--;
+    display.innerText = `Time: ${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(timers[index]);
+      lock(box);
+    }
+  }, 1000);
+}
+
+// ===== ANSWER =====
+function answer(qIndex, optIndex, optDiv, box) {
+  if (studentAnswers[qIndex] !== null) return;
+
+  studentAnswers[qIndex] = optIndex;
+  clearInterval(timers[qIndex]);
+
+  if (optIndex === questions[qIndex].answer) {
+    optDiv.classList.add("correct");
+  } else {
+    optDiv.classList.add("wrong");
+  }
+  lock(box);
+}
+
+// ===== LOCK =====
+function lock(box) {
+  box.querySelectorAll(".option").forEach(o => o.classList.add("disabled"));
+}
+
+// ===== SUBMIT =====
+window.submitExam = function() {
+  let score = 0;
+  reviewContainer.innerHTML = "";
+
+  questions.forEach((q, i) => {
+    if (studentAnswers[i] === q.answer) score++;
+    else {
+      const div = document.createElement("div");
+      div.className = "question-box";
+      if (studentAnswers[i] === null) div.classList.add("unanswered");
+
+      div.innerHTML = `
+        <strong>Question ${i + 1}:</strong> ${q.question}<br>
+        ${studentAnswers[i] === null ? "⚠️ Unanswered<br>" : "❌ Your answer: " + q.options[studentAnswers[i]] + "<br>"}
+        ✅ Correct answer: ${q.options[q.answer]}
+      `;
+      reviewContainer.appendChild(div);
+    }
+  });
+
+  let percent = Math.round((score / questions.length) * 100);
+  quiz.classList.add("hidden");
+  result.classList.remove("hidden");
+
+  scoreText.innerText = `Score: ${percent}%`;
+  message.innerText = percent >= 50 ? "PASS – Well done!" : "FAIL – Study and try again";
+};
 </script>
-
-
 </body>
 </html>
