@@ -85,7 +85,7 @@ WASSCE 2026 PREPARATION GROUP QUIZ BY SIRHENRY & SIR HERBET
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Firebase config (use your own config here)
 const firebaseConfig = {
@@ -209,7 +209,7 @@ function lock(box) {
 }
 
 // ===== SUBMIT =====
-window.submitExam = function() {
+window.submitExam = async function() {
   if (globalTimerInterval) clearInterval(globalTimerInterval);
 
   let score = 0;
@@ -232,6 +232,20 @@ window.submitExam = function() {
   });
 
   let percent = Math.round((score / questions.length) * 100);
+
+  // === SAVE TO FIRESTORE ===
+  try {
+    await addDoc(collection(db, "examResults"), {
+      name: studentName.value,
+      phone: phone.value,
+      score: percent,
+      timestamp: new Date()
+    });
+    console.log("Result saved!");
+  } catch (error) {
+    alert("Failed to save result: " + error.message);
+  }
+
   quiz.classList.add("hidden");
   result.classList.remove("hidden");
 
