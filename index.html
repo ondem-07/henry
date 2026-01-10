@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Student Practice Exam</title>
 <style>
-/* ... (your CSS unchanged) ... */
 body {
   font-family: Arial, sans-serif;
   background: #f4f6f9;
@@ -34,10 +33,6 @@ body {
   pointer-events: none;
   opacity: 0.7;
 }
-.timer {
-  text-align: right;
-  font-weight: bold;
-}
 .unanswered {
   background: #fff3cd;
   border-left: 5px solid #ffc107;
@@ -54,11 +49,17 @@ button {
   color: white;
   border: none;
 }
+#globalTimer {
+  text-align: center;
+  font-size: 1.5em;
+  color: #e53935;
+  margin-bottom: 20px;
+}
 </style>
 </head>
 <body>
 <h1 style="text-align:center; color:#1a73e8; margin-top:20px; font-size:2em;">
-  WASSCE 2026 PREPARATION GROUP QUIZ BY SIRHENRY & SIR HERBET
+WASSCE 2026 PREPARATION GROUP QUIZ BY SIRHENRY & SIR HERBET
 </h1>
 
 <div class="container" id="login">
@@ -70,6 +71,7 @@ button {
 
 <div class="container hidden" id="quiz">
   <h2>Answer All Questions</h2>
+  <div id="globalTimer">Time Left: 01:00:00</div>
   <div id="questionsContainer"></div>
   <button onclick="submitExam()">Submit</button>
 </div>
@@ -109,17 +111,12 @@ const reviewContainer = document.getElementById("reviewContainer");
 const scoreText = document.getElementById("scoreText");
 const message = document.getElementById("message");
 const startBtn = document.getElementById("startBtn");
+const globalTimerDiv = document.getElementById("globalTimer");
 
 let questions = [];
-let questionTime = 20; // default, will be updated from localStorage if available
 let studentAnswers = [];
-let timers = [];
-
-// Load timer from localStorage (set by admin)
-const storedTimer = Number(localStorage.getItem("questionTimer"));
-if (!isNaN(storedTimer) && storedTimer > 0) {
-  questionTime = storedTimer;
-}
+let globalTimerInterval;
+const totalTime = 60 * 60; // 1 hour in seconds
 
 // Load questions from Firestore
 async function loadQuestions() {
@@ -146,6 +143,7 @@ startBtn.onclick = function startTest() {
   login.classList.add("hidden");
   quiz.classList.remove("hidden");
   renderQuestions();
+  startGlobalTimer();
 };
 
 // ===== RENDER QUESTIONS =====
@@ -155,13 +153,7 @@ function renderQuestions() {
   questions.forEach((q, i) => {
     const box = document.createElement("div");
     box.className = "question-box";
-
-    const timerDiv = document.createElement("div");
-    timerDiv.className = "timer";
-    timerDiv.innerText = `Time: ${questionTime}s`;
-
     box.innerHTML = `<h3>Question ${i + 1}: ${q.question}</h3>`;
-    box.prepend(timerDiv);
 
     q.options.forEach((opt, j) => {
       const optDiv = document.createElement("div");
@@ -172,19 +164,27 @@ function renderQuestions() {
     });
 
     questionsContainer.appendChild(box);
-    startTimer(i, timerDiv, box);
   });
 }
 
-// ===== TIMER =====
-function startTimer(index, display, box) {
-  let timeLeft = questionTime;
-  timers[index] = setInterval(() => {
+// ===== GLOBAL TIMER =====
+function updateGlobalTimerDisplay(secondsLeft) {
+  const h = String(Math.floor(secondsLeft / 3600)).padStart(2, '0');
+  const m = String(Math.floor((secondsLeft % 3600) / 60)).padStart(2, '0');
+  const s = String(secondsLeft % 60).padStart(2, '0');
+  globalTimerDiv.innerText = `Time Left: ${h}:${m}:${s}`;
+}
+
+function startGlobalTimer() {
+  let timeLeft = totalTime;
+  updateGlobalTimerDisplay(timeLeft);
+  globalTimerInterval = setInterval(() => {
     timeLeft--;
-    display.innerText = `Time: ${timeLeft}s`;
+    updateGlobalTimerDisplay(timeLeft);
     if (timeLeft <= 0) {
-      clearInterval(timers[index]);
-      lock(box);
+      clearInterval(globalTimerInterval);
+      alert("Time is up! Submitting your exam.");
+      submitExam();
     }
   }, 1000);
 }
@@ -194,7 +194,6 @@ function answer(qIndex, optIndex, optDiv, box) {
   if (studentAnswers[qIndex] !== null) return;
 
   studentAnswers[qIndex] = optIndex;
-  clearInterval(timers[qIndex]);
 
   if (optIndex === questions[qIndex].answer) {
     optDiv.classList.add("correct");
@@ -211,6 +210,8 @@ function lock(box) {
 
 // ===== SUBMIT =====
 window.submitExam = function() {
+  if (globalTimerInterval) clearInterval(globalTimerInterval);
+
   let score = 0;
   reviewContainer.innerHTML = "";
 
