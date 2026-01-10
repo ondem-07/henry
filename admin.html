@@ -1,47 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Teacher Admin Dashboard</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f1f3f6;
-      padding: 20px;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-    }
-    button {
-      background: #1a73e8;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0c5edc;
-    }
-    .hidden {
-      display: none;
-    }
-    .question-box {
-      border-bottom: 1px solid #ddd;
-      padding: 10px 0;
-    }
-    .delete {
-      background: red;
-      margin-top: 5px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Teacher Admin Dashboard</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f1f3f6;
+  padding: 20px;
+}
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+}
+button {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+button:hover {
+  background: #0c5edc;
+}
+.hidden {
+  display: none;
+}
+.question-box {
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+}
+.delete {
+  background: red;
+  margin-top: 5px;
+}
+</style>
 </head>
 <body>
 
@@ -53,13 +53,6 @@
 
 <div class="container hidden" id="dashboard">
   <h2>Teacher Admin Dashboard</h2>
-
-  <!-- TIMER CONTROL -->
-  <h3>Exam Timer Settings</h3>
-  <input type="number" id="timerInput" placeholder="Time per question (seconds)">
-  <button onclick="saveTimer()">Save Timer</button>
-
-  <hr>
 
   <!-- ADD QUESTION -->
   <h3>Add New Question</h3>
@@ -83,128 +76,109 @@
   <div id="questionList"></div>
 </div>
 
-<!-- Firebase App (the core Firebase SDK) -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // Your Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyBQgq3jwip2q9PQ0sSoxvZL1XbUNZvL7KI",
-    authDomain: "sirhenry-ed030.firebaseapp.com",
-    projectId: "sirhenry-ed030",
-    storageBucket: "sirhenry-ed030.appspot.com",
-    messagingSenderId: "258305420826",
-    appId: "1:258305420826:web:978178830620f37ec86ba3"
-  };
+// Your Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBQgq3jwip2q9PQ0sSoxvZL1XbUNZvL7KI",
+  authDomain: "sirhenry-ed030.firebaseapp.com",
+  projectId: "sirhenry-ed030",
+  storageBucket: "sirhenry-ed030.appspot.com",
+  messagingSenderId: "258305420826",
+  appId: "1:258305420826:web:978178830620f37ec86ba3"
+};
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  // DOM Elements
-  const pin = document.getElementById("pin");
-  const login = document.getElementById("login");
-  const dashboard = document.getElementById("dashboard");
-  const timerInput = document.getElementById("timerInput");
-  const qText = document.getElementById("qText");
-  const optA = document.getElementById("optA");
-  const optB = document.getElementById("optB");
-  const optC = document.getElementById("optC");
-  const optD = document.getElementById("optD");
-  const correct = document.getElementById("correct");
-  const questionList = document.getElementById("questionList");
+// DOM Elements
+const pin = document.getElementById("pin");
+const login = document.getElementById("login");
+const dashboard = document.getElementById("dashboard");
+const qText = document.getElementById("qText");
+const optA = document.getElementById("optA");
+const optB = document.getElementById("optB");
+const optC = document.getElementById("optC");
+const optD = document.getElementById("optD");
+const correct = document.getElementById("correct");
+const questionList = document.getElementById("questionList");
 
-  const ADMIN_PIN = "1234"; // Change this PIN for security
+const ADMIN_PIN = "1234"; // Change this PIN for security
 
-  // ===== LOGIN =====
-  window.checkPin = function() {
-    if (pin.value === ADMIN_PIN) {
-      login.classList.add("hidden");
-      dashboard.classList.remove("hidden");
-      loadTimer();
-      renderQuestions();
-    } else {
-      alert("Wrong PIN");
-    }
-  };
-
-  // ===== TIMER CONTROL =====
-  function loadTimer() {
-    let saved = localStorage.getItem("questionTimer") || 20;
-    timerInput.value = saved;
+// ===== LOGIN =====
+window.checkPin = function() {
+  if (pin.value === ADMIN_PIN) {
+    login.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    renderQuestions();
+  } else {
+    alert("Wrong PIN");
   }
+};
 
-  window.saveTimer = function() {
-    let time = Number(timerInput.value);
-    if (time < 5) {
-      alert("Timer must be at least 5 seconds");
-      return;
-    }
-    localStorage.setItem("questionTimer", time);
-    alert("Timer saved successfully");
-  };
+// ===== QUESTIONS =====
+async function renderQuestions() {
+  questionList.innerHTML = "Loading...";
+  const querySnapshot = await getDocs(collection(db, "examQuestions"));
+  questionList.innerHTML = "";
+  let i = 0;
+  querySnapshot.forEach((docSnap) => {
+    const q = docSnap.data();
+    const div = document.createElement("div");
+    div.className = "question-box";
+    div.innerHTML = `
+      <strong>${++i}. ${q.question}</strong><br>
+      A. ${q.options[0]}<br>
+      B. ${q.options[1]}<br>
+      C. ${q.options[2]}<br>
+      D. ${q.options[3]}<br>
+      <em>Correct: ${["A","B","C","D"][q.answer]}</em>
+      <button class="delete" onclick="deleteQuestion('${docSnap.id}')">Delete</button>
+    `;
+    questionList.appendChild(div);
+  });
+  if (i === 0) questionList.innerHTML = "<em>No questions saved yet.</em>";
+}
 
-  // ===== QUESTIONS =====
-  async function renderQuestions() {
-    questionList.innerHTML = "Loading...";
-    const querySnapshot = await getDocs(collection(db, "examQuestions"));
-    questionList.innerHTML = "";
-    let i = 0;
-    querySnapshot.forEach((docSnap) => {
-      const q = docSnap.data();
-      const div = document.createElement("div");
-      div.className = "question-box";
-      div.innerHTML = `
-        <strong>${++i}. ${q.question}</strong><br>
-        A. ${q.options[0]}<br>
-        B. ${q.options[1]}<br>
-        C. ${q.options[2]}<br>
-        D. ${q.options[3]}<br>
-        <em>Correct: ${["A","B","C","D"][q.answer]}</em>
-        <button class="delete" onclick="deleteQuestion('${docSnap.id}')">Delete</button>
-      `;
-      questionList.appendChild(div);
+window.addQuestion = async function() {
+  if (!qText.value || !optA.value || !optB.value || !optC.value || !optD.value || correct.value === "") {
+    alert("Fill all fields");
+    return;
+  }
+  try {
+    await addDoc(collection(db, "examQuestions"), {
+      question: qText.value,
+      options: [optA.value, optB.value, optC.value, optD.value],
+      answer: Number(correct.value)
     });
-    if (i === 0) questionList.innerHTML = "<em>No questions saved yet.</em>";
+    clearForm();
+    renderQuestions();
+  } catch (e) {
+    alert("Error saving question: " + e.message);
   }
+};
 
-  window.addQuestion = async function() {
-    if (!qText.value || !optA.value || !optB.value || !optC.value || !optD.value || correct.value === "") {
-      alert("Fill all fields");
-      return;
-    }
-    try {
-      await addDoc(collection(db, "examQuestions"), {
-        question: qText.value,
-        options: [optA.value, optB.value, optC.value, optD.value],
-        answer: Number(correct.value)
-      });
-      clearForm();
-      renderQuestions();
-    } catch (e) {
-      alert("Error saving question: " + e.message);
-    }
-  };
-
-  window.deleteQuestion = async function(id) {
-    if (confirm("Delete this question?")) {
-      await deleteDoc(doc(db, "examQuestions", id));
-      renderQuestions();
-    }
-  };
-
-  function clearForm() {
-    qText.value = "";
-    optA.value = "";
-    optB.value = "";
-    optC.value = "";
-    optD.value = "";
-    correct.value = "";
+window.deleteQuestion = async function(id) {
+  if (confirm("Delete this question?")) {
+    await deleteDoc(doc(db, "examQuestions", id));
+    renderQuestions();
   }
+};
 
-  // Expose renderQuestions for login
-  window.renderQuestions = renderQuestions;
+function clearForm() {
+  qText.value = "";
+  optA.value = "";
+  optB.value = "";
+  optC.value = "";
+  optD.value = "";
+  correct.value = "";
+}
+
+// Expose renderQuestions for login
+window.renderQuestions = renderQuestions;
 
 </script>
 </body>
