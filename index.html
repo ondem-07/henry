@@ -5,82 +5,92 @@
 <title>Student Practice Exam</title>
 <style>
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f9;
+font-family: Arial, sans-serif;
+background: #f4f6f9;
 }
 .container {
-  max-width: 850px;
-  margin: auto;
-  background: white;
-  padding: 20px;
-  margin-top: 30px;
-  border-radius: 10px;
+max-width: 850px;
+margin: auto;
+background: white;
+padding: 20px;
+margin-top: 30px;
+border-radius: 10px;
 }
 .question-box {
-  border-bottom: 1px solid #ddd;
-  padding: 15px 0;
+border-bottom: 1px solid #ddd;
+padding: 15px 0;
 }
 .option {
-  background: #eef1f5;
-  padding: 10px;
-  margin-top: 8px;
-  border-radius: 5px;
-  cursor: pointer;
+background: #eef1f5;
+padding: 10px;
+margin-top: 8px;
+border-radius: 5px;
+cursor: pointer;
 }
 .option.correct { background: #c8f7c5; }
 .option.wrong { background: #f7c5c5; }
 .option.disabled {
-  pointer-events: none;
-  opacity: 0.7;
+pointer-events: none;
+opacity: 0.7;
 }
 .unanswered {
-  background: #fff3cd;
-  border-left: 5px solid #ffc107;
-  padding: 10px;
+background: #fff3cd;
+border-left: 5px solid #ffc107;
+padding: 10px;
 }
 .hidden { display: none; }
 button, input {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
+width: 100%;
+padding: 12px;
+margin-top: 10px;
 }
 button {
-  background: #1a73e8;
-  color: white;
-  border: none;
+background: #1a73e8;
+color: white;
+border: none;
 }
 #globalTimer {
-  text-align: center;
-  font-size: 1.5em;
-  color: #e53935;
-  margin-bottom: 20px;
+text-align: center;
+font-size: 1.5em;
+color: #e53935;
+margin-bottom: 20px;
+}
+.question-image {
+max-width: 250px;
+display: block;
+margin: 10px 0;
+border-radius: 5px;
+border: 1px solid #ccc;
 }
 </style>
 </head>
 <body>
 <h1 style="text-align:center; color:#1a73e8; margin-top:20px; font-size:2em;">
-WASSCE 2026 PREPARATION GROUP QUIZ BY SIRHENRY & SIR HERBERT
+WASSCE 2026 PREPARATION GROUP QUIZ BY SIRHENRY & SIR HERBET
 </h1>
+<a href="http://www.google.com" title="goes to our main channel">
+join wassce group here
+</a>
 
 <div class="container" id="login">
-  <h2>Student Login</h2>
-  <input id="studentName" placeholder="Full Name">
-  <input id="phone" placeholder="Phone Number">
-  <button id="startBtn">Start Test</button>
+<h2>Student Login</h2>
+<input id="studentName" placeholder="Full Name">
+<input id="phone" placeholder="Phone Number">
+<button id="startBtn">Start Test</button>
 </div>
 
 <div class="container hidden" id="quiz">
-  <h2>Answer All Questions</h2>
-  <div id="globalTimer">Time Left: 01:00:00</div>
-  <div id="questionsContainer"></div>
-  <button onclick="submitExam()">Submit</button>
+<h2>Answer All Questions</h2>
+<div id="globalTimer">Time Left: 01:00:00</div>
+<div id="questionsContainer"></div>
+<button onclick="submitExam()">Submit</button>
 </div>
 
 <div class="container hidden" id="result">
-  <h2 id="scoreText"></h2>
-  <p id="message"></p>
-  <h3>Review</h3>
-  <div id="reviewContainer"></div>
+<h2 id="scoreText"></h2>
+<p id="message"></p>
+<h3>Review</h3>
+<div id="reviewContainer"></div>
 </div>
 
 <script type="module">
@@ -89,12 +99,12 @@ import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.c
 
 // Firebase config (use your own config here)
 const firebaseConfig = {
-  apiKey: "AIzaSyBQgq3jwip2q9PQ0sSoxvZL1XbUNZvL7KI",
-  authDomain: "sirhenry-ed030.firebaseapp.com",
-  projectId: "sirhenry-ed030",
-  storageBucket: "sirhenry-ed030.appspot.com",
-  messagingSenderId: "258305420826",
-  appId: "1:258305420826:web:978178830620f37ec86ba3"
+apiKey: "AIzaSyBQgq3jwip2q9PQ0sSoxvZL1XbUNZvL7KI",
+authDomain: "sirhenry-ed030.firebaseapp.com",
+projectId: "sirhenry-ed030",
+storageBucket: "sirhenry-ed030.appspot.com",
+messagingSenderId: "258305420826",
+appId: "1:258305420826:web:978178830620f37ec86ba3"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -120,139 +130,142 @@ const totalTime = 60 * 60; // 1 hour in seconds
 
 // Load questions from Firestore
 async function loadQuestions() {
-  questions = [];
-  const querySnapshot = await getDocs(collection(db, "examQuestions"));
-  querySnapshot.forEach((docSnap) => {
-    questions.push(docSnap.data());
-  });
+questions = [];
+const querySnapshot = await getDocs(collection(db, "examQuestions"));
+querySnapshot.forEach((docSnap) => {
+questions.push(docSnap.data());
+});
 }
 await loadQuestions(); // Load questions before enabling the test
 
 // ===== START TEST =====
 startBtn.onclick = function startTest() {
-  if (!studentName.value || !phone.value) {
-    alert("Enter name and phone number");
-    return;
-  }
-  if (questions.length === 0) {
-    alert("No questions available");
-    return;
-  }
+if (!studentName.value || !phone.value) {
+alert("Enter name and phone number");
+return;
+}
+if (questions.length === 0) {
+alert("No questions available");
+return;
+}
 
-  studentAnswers = Array(questions.length).fill(null);
-  login.classList.add("hidden");
-  quiz.classList.remove("hidden");
-  renderQuestions();
-  startGlobalTimer();
+studentAnswers = Array(questions.length).fill(null);
+login.classList.add("hidden");
+quiz.classList.remove("hidden");
+renderQuestions();
+startGlobalTimer();
 };
 
 // ===== RENDER QUESTIONS =====
 function renderQuestions() {
-  questionsContainer.innerHTML = "";
+questionsContainer.innerHTML = "";
 
-  questions.forEach((q, i) => {
-    const box = document.createElement("div");
-    box.className = "question-box";
-    box.innerHTML = `<h3>Question ${i + 1}: ${q.question}</h3>`;
+questions.forEach((q, i) => {
+const box = document.createElement("div");
+box.className = "question-box";
+box.innerHTML = `
+${q.image ? `<img src="${q.image}" alt="Question Image" class="question-image">` : ""}
+<h3>Question ${i + 1}: ${q.question}</h3>
+`;
 
-    q.options.forEach((opt, j) => {
-      const optDiv = document.createElement("div");
-      optDiv.className = "option";
-      optDiv.innerText = opt;
-      optDiv.onclick = () => answer(i, j, optDiv, box);
-      box.appendChild(optDiv);
-    });
+q.options.forEach((opt, j) => {
+const optDiv = document.createElement("div");
+optDiv.className = "option";
+optDiv.innerText = opt;
+optDiv.onclick = () => answer(i, j, optDiv, box);
+box.appendChild(optDiv);
+});
 
-    questionsContainer.appendChild(box);
-  });
+questionsContainer.appendChild(box);
+});
 }
 
 // ===== GLOBAL TIMER =====
 function updateGlobalTimerDisplay(secondsLeft) {
-  const h = String(Math.floor(secondsLeft / 3600)).padStart(2, '0');
-  const m = String(Math.floor((secondsLeft % 3600) / 60)).padStart(2, '0');
-  const s = String(secondsLeft % 60).padStart(2, '0');
-  globalTimerDiv.innerText = `Time Left: ${h}:${m}:${s}`;
+const h = String(Math.floor(secondsLeft / 3600)).padStart(2, '0');
+const m = String(Math.floor((secondsLeft % 3600) / 60)).padStart(2, '0');
+const s = String(secondsLeft % 60).padStart(2, '0');
+globalTimerDiv.innerText = `Time Left: ${h}:${m}:${s}`;
 }
 
 function startGlobalTimer() {
-  let timeLeft = totalTime;
-  updateGlobalTimerDisplay(timeLeft);
-  globalTimerInterval = setInterval(() => {
-    timeLeft--;
-    updateGlobalTimerDisplay(timeLeft);
-    if (timeLeft <= 0) {
-      clearInterval(globalTimerInterval);
-      alert("Time is up! Submitting your exam.");
-      submitExam();
-    }
-  }, 1000);
+let timeLeft = totalTime;
+updateGlobalTimerDisplay(timeLeft);
+globalTimerInterval = setInterval(() => {
+timeLeft--;
+updateGlobalTimerDisplay(timeLeft);
+if (timeLeft <= 0) {
+clearInterval(globalTimerInterval);
+alert("Time is up! Submitting your exam.");
+submitExam();
+}
+}, 1000);
 }
 
 // ===== ANSWER =====
 function answer(qIndex, optIndex, optDiv, box) {
-  if (studentAnswers[qIndex] !== null) return;
+if (studentAnswers[qIndex] !== null) return;
 
-  studentAnswers[qIndex] = optIndex;
+studentAnswers[qIndex] = optIndex;
 
-  if (optIndex === questions[qIndex].answer) {
-    optDiv.classList.add("correct");
-  } else {
-    optDiv.classList.add("wrong");
-  }
-  lock(box);
+if (optIndex === questions[qIndex].answer) {
+optDiv.classList.add("correct");
+} else {
+optDiv.classList.add("wrong");
+}
+lock(box);
 }
 
 // ===== LOCK =====
 function lock(box) {
-  box.querySelectorAll(".option").forEach(o => o.classList.add("disabled"));
+box.querySelectorAll(".option").forEach(o => o.classList.add("disabled"));
 }
 
 // ===== SUBMIT =====
 window.submitExam = async function() {
-  if (globalTimerInterval) clearInterval(globalTimerInterval);
+if (globalTimerInterval) clearInterval(globalTimerInterval);
 
-  let score = 0;
-  reviewContainer.innerHTML = "";
+let score = 0;
+reviewContainer.innerHTML = "";
 
-  questions.forEach((q, i) => {
-    if (studentAnswers[i] === q.answer) score++;
-    else {
-      const div = document.createElement("div");
-      div.className = "question-box";
-      if (studentAnswers[i] === null) div.classList.add("unanswered");
+questions.forEach((q, i) => {
+if (studentAnswers[i] === q.answer) score++;
+else {
+const div = document.createElement("div");
+div.className = "question-box";
+if (studentAnswers[i] === null) div.classList.add("unanswered");
 
-      div.innerHTML = `
-        <strong>Question ${i + 1}:</strong> ${q.question}<br>
-        ${studentAnswers[i] === null ? "⚠️ Unanswered<br>" : "❌ Your answer: " + q.options[studentAnswers[i]] + "<br>"}
-        ✅ Correct answer: ${q.options[q.answer]}
-      `;
-      reviewContainer.appendChild(div);
-    }
-  });
+div.innerHTML = `
+<strong>Question ${i + 1}:</strong> ${q.question}<br>
+${q.image ? `<img src="${q.image}" alt="Question Image" class="question-image">` : ""}
+${studentAnswers[i] === null ? "⚠️ Unanswered<br>" : "❌ Your answer: " + q.options[studentAnswers[i]] + "<br>"}
+✅ Correct answer: ${q.options[q.answer]}
+`;
+reviewContainer.appendChild(div);
+}
+});
 
-  let percent = Math.round((score / questions.length) * 100);
+let percent = Math.round((score / questions.length) * 100);
 
-  // === SAVE TO FIRESTORE ===
-  try {
-    await addDoc(collection(db, "examResults"), {
-      name: studentName.value,
-      phone: phone.value,
-      score: percent,
-      timestamp: new Date()
-    });
-    console.log("Result saved!");
-  } catch (error) {
-    alert("Failed to save result: " + error.message);
-  }
+// === SAVE TO FIRESTORE ===
+try {
+await addDoc(collection(db, "examResults"), {
+name: studentName.value,
+phone: phone.value,
+score: percent,
+timestamp: new Date()
+});
+console.log("Result saved!");
+} catch (error) {
+alert("Failed to save result: " + error.message);
+}
 
-  quiz.classList.add("hidden");
-  result.classList.remove("hidden");
+quiz.classList.add("hidden");
+result.classList.remove("hidden");
 
-  scoreText.innerText = `Score: ${percent}%`;
-  message.innerText = percent >= 50 ? "PASS – Well done!" : "FAIL – Study and try again";
+scoreText.innerText = `Score: ${percent}%`;
+message.innerText = percent >= 50 ? "PASS – Well done!" : "FAIL – Study and try again";
 };
 </script>
 </body>
-
 </html>
