@@ -47,13 +47,6 @@ button:hover {
  margin-bottom: 20px;
  border-radius: 5px;
 }
-img.question-image {
- max-width: 200px;
- display: block;
- margin: 10px 0;
- border-radius: 5px;
- border: 1px solid #ccc;
-}
 </style>
 </head>
 <body>
@@ -70,7 +63,6 @@ img.question-image {
  <!-- ADD QUESTION -->
  <h3>Add New Question</h3>
  <input id="qText" placeholder="Question">
- <input type="file" id="qImage" accept="image/*">
  <input id="optA" placeholder="Option A">
  <input id="optB" placeholder="Option B">
  <input id="optC" placeholder="Option C">
@@ -95,7 +87,6 @@ img.question-image {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -110,14 +101,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 // DOM Elements
 const pin = document.getElementById("pin");
 const login = document.getElementById("login");
 const dashboard = document.getElementById("dashboard");
 const qText = document.getElementById("qText");
-const qImage = document.getElementById("qImage");
 const optA = document.getElementById("optA");
 const optB = document.getElementById("optB");
 const optC = document.getElementById("optC");
@@ -150,9 +139,7 @@ async function renderQuestions() {
    const div = document.createElement("div");
    div.className = "question-box";
    div.innerHTML = `
-     <strong>${++i}. ${q.question}</strong><br>
-     ${q.image ? `<img src="${q.image}" alt="Question Image" class="question-image">` : ""}
-     <br>
+     <strong>${++i}. ${q.question}</strong><br><br>
      A. ${q.options[0]}<br><br>
      B. ${q.options[1]}<br><br>
      C. ${q.options[2]}<br><br>
@@ -170,20 +157,9 @@ window.addQuestion = async function() {
    alert("Fill all fields");
    return;
  }
-
- let imageUrl = "";
- if (qImage.files.length > 0) {
-   // Upload image to Firebase Storage
-   const imageFile = qImage.files[0];
-   const imageRef = ref(storage, "questionImages/" + Date.now() + "_" + imageFile.name);
-   await uploadBytes(imageRef, imageFile);
-   imageUrl = await getDownloadURL(imageRef);
- }
-
  try {
    await addDoc(collection(db, "examQuestions"), {
      question: qText.value,
-     image: imageUrl, // Save image URL (empty string if no image)
      options: [optA.value, optB.value, optC.value, optD.value],
      answer: Number(correct.value)
    });
@@ -203,7 +179,6 @@ window.deleteQuestion = async function(id) {
 
 function clearForm() {
  qText.value = "";
- qImage.value = "";
  optA.value = "";
  optB.value = "";
  optC.value = "";
